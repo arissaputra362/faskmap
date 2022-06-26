@@ -398,7 +398,7 @@ function insideCircle(layer, center, radius) {
     var closest = 0;
     var newDistance;
     obj = [];
-    console.log(center);
+    // console.log(center);
 
     layer.eachLayer(function (layer) {
         // Get layer coordinates
@@ -571,7 +571,7 @@ function routingDijkstra(start, finish, line) {
         });
         map.setZoom(16);
         routingLine.addTo(legends);
-        console.log(hasilDijkstra.dist);
+        // console.log(hasilDijkstra.dist);
         return hasilDijkstra.dist;
     } else {
         return hasilDijkstra.dist;
