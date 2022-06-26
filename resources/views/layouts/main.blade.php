@@ -3,10 +3,11 @@
 
 <head>
 
-    <title>Faskmap | Faskes Map Mojokerto</title>
+    <title>Kesmap | Faskes Map Sidoarjo</title>
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
 
@@ -141,7 +142,8 @@
                                 d.id +
                                 ')" style="cursor: pointer"><b>' + d
                                 .nama + '</b><br>' +
-                                ((d.no) ? d.no : '-') + '<br>' + d.alamat + '</li>'
+                                ((d.no) ? d.no : '-') + '<br> Jarak : ' +
+                                Math.round(d.jarak) / 1000 + ' KM <br>' + d.alamat + '</li>'
                             );
                         });
                     } else {
@@ -177,7 +179,7 @@
             obj.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
             var lat = latitude.value;
             var lng = longitude.value;
-            console.log(obj);
+            // console.log(obj);
             var myJson = JSON.stringify(obj);
 
             // Get Closest From Position Faskes Data List
@@ -199,7 +201,8 @@
                                 d.id +
                                 ')" style="cursor: pointer"><b>' + d
                                 .nama + '</b><br>' +
-                                ((d.no) ? d.no : '-') + '<br>' + d.alamat + '</li>'
+                                ((d.no) ? d.no : '-') + '<br> Jarak : ' +
+                                Math.round(d.jarak) / 1000 + ' KM <br>' + d.alamat + '</li>'
                             );
                         });
                     } else {

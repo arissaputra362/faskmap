@@ -18,3 +18,4 @@ Route::get('/', [HomeController::class, 'index']);
 Route::get('/app', [HomeController::class, 'app']);
 Route::get('/getFaskes', [HomeController::class, 'getFaskes']);
 Route::get('/getLoct', [HomeController::class, 'getLocation']);
+Route::post('/updateRoad', [HomeController::class, 'updateRoadData']);

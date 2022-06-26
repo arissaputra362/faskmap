@@ -4,7 +4,7 @@
     <nav class="navbar py-3 sticky-top navbar-expand-lg navbar-dark">
         <div class="container px-0">
             <a class="navbar-brand mr-0" href="#home">
-                Faskmap
+                Kesmap
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,13 +60,14 @@
                 </div>
                 <div class="col-md-6 my-auto">
                     <div class="headline">
-                        About Faskmap
+                        About Kesmap
                     </div>
                     <div class="subheadline mt-4">
-                        Faskmap (Faskes Map) adalah sebuah web aplikasi informasi geografis yang bertujuan untuk memudahkan
-                        pengguna dalam mencari Fasilitas Kesehatan di sekitar lokasinya di dalam Kota Mojokerto. Dengan
-                        menampilkan hampir semua data fasilitas kesehatan yang ada di Kota Mojokerto dan menampilkan daftar
-                        fasilitas kesehatan dengan radius 1km dari lokasi pengguna, serta juga menunjukkan rute untuk menuju
+                        Kesmap (Faskes Map) adalah sebuah web aplikasi informasi geografis yang bertujuan untuk memudahkan
+                        pengguna dalam mencari Fasilitas Kesehatan di sekitar lokasinya di dalam Kabupaten Sidoarjo. Dengan
+                        menampilkan hampir semua data fasilitas kesehatan yang ada di Kabupaten Sidoarjo dan menampilkan
+                        daftar fasilitas kesehatan dengan radius 1km dari lokasi pengguna, serta juga menunjukkan rute untuk
+                        menuju
                         salah satu
                         faskes yg dituju.
                     </div>
@@ -113,7 +114,7 @@
                 <div class="card">
                     <div class="card-body p-0">
                         <div class="img-container p-3">
-                            <img src="img/rute.png" alt="dolar" class="img-fluid" />
+                            <img src="img/ss_rute.png" alt="dolar" class="img-fluid" />
                         </div>
                         <div class="card-desc">
                             <h4 class="card-title">Menunjukkan Rute</h4>
@@ -153,7 +154,7 @@
         <div class="container-fluid text-md-left">
             <div class="row">
                 <div class="col-md-4 mt-md-0 mt-3">
-                    <h3 class="font-weight-bold mb-4">Faskmap</h3>
+                    <h3 class="font-weight-bold mb-4">Kesmap</h3>
                     <p class="mb-2">Ketahui Fasilitas</p>
                     <p>Kesehatan Di dekatmu</p>
                 </div>

@@ -202,20 +202,6 @@ var roadwayLine = L.geoJSON([roadway], {
     },
 });
 
-// Routing function from pin to faskes
-// function routing(pinLatLng, hospitalLatLng) {
-//     if (tempWay) {
-//         map.removeControl(route);
-//     }
-
-//     route = L.Routing.control({
-//         waypoints: [L.latLng(pinLatLng), L.latLng(hospitalLatLng)],
-//     }).addTo(map);
-
-//     // Set tempt with hospital coordinates
-//     tempWay = hospitalLatLng;
-// }
-
 // Set new current coordinates with marker coordinates
 newCurr = marker.getLatLng();
 
@@ -234,13 +220,55 @@ function focusOn(id) {
                 .addTo(map)
                 .bringToBack();
 
-            insideSmallCircle(
+            let iniJarakRute = insideSmallCircle(
                 roadwayLine,
                 smallCircle,
                 newCurr,
                 layer.getLatLng(),
                 true
             );
+
+            layer._popup.setContent(
+                layer.feature.properties.popupContent +
+                    "<br> Jarak : " +
+                    (iniJarakRute / 1000).toFixed(3) +
+                    " KM"
+            );
+
+            // let vertexPoint = ["A", "B", "C", "D", "E", "F", "H", "T"];
+            // let vertexEdge = [
+            //     ["H", "A", 2],
+            //     ["H", "C", 4],
+            //     ["H", "B", 5],
+            //     ["A", "B", 2],
+            //     ["C", "B", 1],
+            //     ["C", "E", 4],
+            //     ["A", "F", 12],
+            //     ["A", "D", 7],
+            //     ["B", "D", 4],
+            //     ["B", "E", 3],
+            //     ["D", "T", 5],
+            //     ["E", "T", 7],
+            //     ["F", "T", 3],
+            // ];
+
+            // let tesGraph = new WeightedGrap();
+
+            // vertexPoint.forEach((element) => {
+            //     tesGraph.addVertex(element);
+            // });
+
+            // vertexEdge.forEach((element) => {
+            //     tesGraph.addEdge(element[0], element[1], element[2]);
+            // });
+
+            // let update = [
+            //     ["B", "D", 1],
+            //     // ["H", "A", 5],
+            // ];
+
+            // let hasilDijkstra = tesGraph.Dijkstra("H", "T", update);
+            // console.log(hasilDijkstra);
         }
     });
 }
@@ -260,10 +288,6 @@ function findMe() {
         routingLine.remove();
         routingLine = undefined;
     }
-    // remove routing
-    // if (tempWay) {
-    //     map.removeControl(route);
-    // }
 
     // Check user GPS Position
     map.on("locationfound", function (ev) {
@@ -363,7 +387,7 @@ function insideSmallCircle(road, smallCircle, start, finish, line) {
     tempGraphLatLng.push(finish);
 
     if (line == true) {
-        routingDijkstra(start, finish, line);
+        return routingDijkstra(start, finish, line);
     } else {
         return routingDijkstra(start, finish, line);
     }
@@ -374,6 +398,7 @@ function insideCircle(layer, center, radius) {
     var closest = 0;
     var newDistance;
     obj = [];
+    console.log(center);
 
     layer.eachLayer(function (layer) {
         // Get layer coordinates
@@ -405,6 +430,17 @@ function insideCircle(layer, center, radius) {
             // console.log(newDistance);
             // Send Layer Data to data list
             obj.push({ id: layer.feature.id, jarak: newDistance });
+            layer._popup.setContent(
+                layer.feature.properties.popupContent +
+                    "<br> Jarak : " +
+                    (newDistance / 1000).toFixed(3) +
+                    " KM"
+            );
+            // console.log(JSON.stringify({
+            //     id: layer.feature.properties.popupContent,
+            //     jarak: newDistance,
+            // }));
+
             if (closest == 0 || closest > newDistance) {
                 closest = newDistance;
                 // open closest faskes with user position pop up
@@ -428,10 +464,6 @@ marker.on("dragend", function (event) {
         routingLine.remove();
         routingLine = undefined;
     }
-    // // Remove routing
-    // if (tempWay) {
-    //     map.removeControl(route);
-    // }
 
     // coordinates to execute in this function while pin location dragging
     var position = marker.getLatLng();
@@ -511,14 +543,13 @@ function routingDijkstra(start, finish, line) {
         graph.addEdge(element[0], element[1], element[2]);
     });
 
-    let hasilDijkstra = graph.Dijkstra(start, finish);
-    // console.log(hasilDijkstra);
+    let hasilDijkstra = graph.Dijkstra(start, finish, graphWeight);
 
     let newHasil = [];
 
-    hasilDijkstra.forEach(function (ll) {
+    hasilDijkstra.rute.forEach(function (ll) {
         if (typeof ll == "string") {
-            console.log(ll);
+            // console.log(ll);
             var latlng = ll.split(/, ?/);
             let el = L.latLng(
                 parseFloat(latlng[0].match(/-?(?:\d+(?:\.\d*)?|\.\d+)/)),
@@ -528,7 +559,8 @@ function routingDijkstra(start, finish, line) {
         }
         newHasil.push(ll);
     });
-    console.log(newHasil);
+
+    // console.log(newHasil);
 
     if (line == true) {
         routingLine = new L.Polyline(newHasil, {
@@ -537,30 +569,12 @@ function routingDijkstra(start, finish, line) {
             opacity: 0.5,
             smoothFactor: 1,
         });
+        map.setZoom(16);
         routingLine.addTo(legends);
+        console.log(hasilDijkstra.dist);
+        return hasilDijkstra.dist;
     } else {
-        var result = graphWeight;
-        var faskesDistance = 0;
-        var newGraph = [];
-        result.forEach((element) => {
-            // console.log(element);
-            for (let i = 0; i < newHasil.length - 2; i++) {
-                // console.log(newHasil[i]);
-                if (
-                    (element[0] == newHasil[i] &&
-                        element[1] == newHasil[i + 1]) ||
-                    (element[0] == newHasil[i + 1] && element[1] == newHasil[i])
-                ) {
-                    if (!newGraph.includes(element)) {
-                        newGraph.push(element);
-                        faskesDistance = faskesDistance + element[2];
-                    }
-                }
-            }
-        });
-        return faskesDistance;
-
-        // console.log(newGraph);
+        return hasilDijkstra.dist;
     }
 }
 
@@ -591,6 +605,10 @@ $(document).ready(function () {
     insideCircle(hospitalLayer, circleCenter, circleRadius);
 });
 
+function emptyObject(obj) {
+    Object.keys(obj).forEach((k) => delete obj[k]);
+}
+
 class WeightedGrap {
     constructor() {
         this.adjacencyList = {};
@@ -602,32 +620,36 @@ class WeightedGrap {
         }
     }
 
-    addEdge(vertex1, vertex2, weight) {
-        this.adjacencyList[vertex1].push({ node: vertex2, weight });
-        this.adjacencyList[vertex2].push({ node: vertex1, weight });
+    addEdge(vertex1, vertex2, weight, time = 0) {
+        this.adjacencyList[vertex1].push({ node: vertex2, weight, time });
+        this.adjacencyList[vertex2].push({ node: vertex1, weight, time });
     }
 
-    Dijkstra(start, finish) {
+    Dijkstra(start, finish, updated) {
         const nodes = new PriorityQueue();
         const distances = {};
         const previous = {};
         let path = [];
         let smallest;
+        let time = 0;
 
         for (let vertex in this.adjacencyList) {
             if (vertex == start) {
-                nodes.enqueue(vertex, 0);
+                nodes.enqueue(vertex, 0, time);
                 distances[vertex] = 0;
             } else {
                 distances[vertex] = Infinity;
-                nodes.enqueue(vertex, Infinity);
+                nodes.enqueue(vertex, Infinity, time);
             }
 
             previous[vertex] = null;
         }
 
+        let countNode = 0;
         while (nodes.values.length) {
             smallest = nodes.dequeue().val;
+            let updateCount = 0;
+            time++;
             if (smallest === finish) {
                 while (previous[smallest]) {
                     path.push(smallest);
@@ -636,11 +658,16 @@ class WeightedGrap {
                 break;
             }
 
+            // console.log("Value Incre");
+            // console.log(JSON.stringify(previous));
+            // console.log(JSON.stringify(distances));
+
             if (smallest || distances[smallest] != Infinity) {
                 for (let neighbor in this.adjacencyList[smallest]) {
                     // find neighbor node
                     let nextNode = this.adjacencyList[smallest][neighbor];
-                    // console.log(nextNode);
+                    // console.log("Next Node");
+                    // console.log(JSON.stringify(nextNode));
 
                     let candidate = distances[smallest] + nextNode.weight;
                     let nextNeighbor = nextNode.node;
@@ -650,25 +677,192 @@ class WeightedGrap {
 
                         previous[nextNeighbor] = smallest;
 
-                        nodes.enqueue(nextNeighbor, candidate);
+                        nodes.enqueue(nextNeighbor, candidate, time);
                     }
+                    // console.log("Value");
+                    // console.log(JSON.stringify(nodes.values));
+                }
+            }
+
+            if (countNode == nodes.values.length - 1) {
+                // console.log("Check penambahan");
+                while (updateCount < 10) {
+                    let updatedData = [];
+                    // Checking update
+                    $.ajax({
+                        headers: {
+                            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                                "content"
+                            ),
+                        },
+                        url: "/updateRoad",
+                        type: "POST",
+                        dataType: "json",
+                        async: false,
+                        data: {
+                            action: "exec_find",
+                            data: JSON.stringify(updated),
+                        },
+                        success: function (data) {
+                            // continue program
+                            if (data) {
+                                updatedData = JSON.stringify(data.data);
+                            } else {
+                                // console.log("Can't get data");
+                            }
+                        },
+                        error: function (log) {
+                            // handle error
+                        },
+                    });
+
+                    updatedData = JSON.parse(updatedData);
+                    let updatedCounting = 0;
+                    if (updatedData.length > 0) {
+                        // console.log(updatedData.length);
+                        updatedData.forEach((updateElement) => {
+                            // console.log("Update Element");
+                            let eh = String(updateElement[1]);
+                            let et = String(updateElement[0]);
+                            let updatePriority = updateElement[2];
+                            let i = 0;
+
+                            nodes.values.forEach((node) => {
+                                if (node.val == eh) {
+                                    // console.log("Exec");
+                                    if (
+                                        previous[node.val] == et &&
+                                        node.priority != Infinity
+                                    ) {
+                                        let nodeNeighbour =
+                                            this.adjacencyList[node.val];
+                                        let diff = 0;
+                                        nodeNeighbour.forEach(
+                                            (thisNeighbour) => {
+                                                if (
+                                                    thisNeighbour.node ==
+                                                    previous[node.val]
+                                                ) {
+                                                    diff =
+                                                        thisNeighbour.weight -
+                                                        updatePriority;
+                                                }
+                                            }
+                                        );
+                                        // console.log(eh);
+                                        // console.log(et);
+                                        // console.log("Sebelum");
+                                        // console.log(node.priority);
+                                        // console.log(diff);
+                                        node.priority = node.priority - diff;
+                                        // console.log("Sesudah");
+                                        // console.log(node.priority);
+                                        if (i == 0) {
+                                            distances[node.val] = node.priority;
+                                            i++;
+                                        } else {
+                                            if (
+                                                node.priority <
+                                                distances[node.val]
+                                            ) {
+                                                distances[node.val] =
+                                                    node.priority;
+                                                // eh = et;
+                                            }
+                                            i++;
+                                        }
+                                    }
+                                }
+                            });
+
+                            // console.log("Del MIN");
+                            let startReturn = false;
+                            nodes.del_min.forEach((node) => {
+                                if (node.val == eh) {
+                                    // console.log(previous[node.val]);
+                                    if (previous[node.val] == et) {
+                                        // console.log("DEL_MIN");
+                                        // console.log(previous[node.val]);
+                                        let nodeNeighbour =
+                                            this.adjacencyList[node.val];
+                                        let diff = 0;
+                                        nodeNeighbour.forEach(
+                                            (thisNeighbour) => {
+                                                if (
+                                                    thisNeighbour.node ==
+                                                    previous[node.val]
+                                                ) {
+                                                    diff =
+                                                        thisNeighbour.weight -
+                                                        updatePriority;
+                                                }
+                                            }
+                                        );
+                                        node.priority = node.priority - diff;
+                                        if (
+                                            node.priority < distances[node.val]
+                                        ) {
+                                            distances[node.val] = node.priority;
+                                        }
+                                        // eh = et;
+                                        startReturn = true;
+                                    }
+                                }
+                                if (startReturn == true) {
+                                    nodes.enqueue(
+                                        node.val,
+                                        node.priority,
+                                        node.time
+                                    );
+                                    removeItemOnce(nodes.del_min, node);
+                                }
+                            });
+                            // console.log("DEl MIN2");
+                            updatedCounting++;
+                        });
+                        updatedData = [];
+                        // console.log("Counting");
+                        // console.log(updatedCounting);
+                    }
+                    updateCount++;
                 }
             }
             // console.log(neg);
+            countNode++;
         }
+        // console.log("DEl MIN");
+        // console.log(JSON.stringify(nodes.del_min));
         // console.log(whilee);
+        // console.log("Distance");
+        // console.log(distances[finish]);
+        // console.log(path);
 
-        return path.concat(smallest).reverse();
+        let data = {
+            rute: path.concat(smallest).reverse(),
+            dist: distances[finish],
+        };
+
+        // return path.concat(smallest).reverse();
+        return data;
     }
+}
+
+function removeItemOnce(arr, value) {
+    var index = arr.indexOf(value);
+    if (index > -1) {
+        arr.splice(index, 1);
+    }
+    return arr;
 }
 
 class PriorityQueue {
     constructor() {
         this.values = [];
+        this.del_min = [];
     }
 
-    enqueue(val, priority) {
-        let newNode = new Node(val, priority);
+    enqueue(val, priority, time) {
+        let newNode = new Node(val, priority, time);
         this.values.push(newNode);
         this.bubbleUp();
     }
@@ -687,6 +881,20 @@ class PriorityQueue {
         }
     }
 
+    bubbleUpDel() {
+        let idx = this.del_min.length - 1;
+        const element = this.del_min[idx];
+
+        while (idx > 0) {
+            let parentIdx = Math.floor((idx - 1) / 2);
+            let parent = this.del_min[parentIdx];
+            if (element.time >= parent.time) break;
+            this.del_min[parentIdx] = element;
+            this.del_min[idx] = parent;
+            idx = parentIdx;
+        }
+    }
+
     dequeue() {
         const min = this.values[0];
         const end = this.values.pop();
@@ -694,6 +902,8 @@ class PriorityQueue {
             this.values[0] = end;
             this.sinkDown();
         }
+        this.del_min.push(min);
+        this.bubbleUpDel();
         return min;
     }
 
@@ -731,197 +941,47 @@ class PriorityQueue {
             idx = swap;
         }
     }
-}
 
-class Node {
-    constructor(val, priority) {
-        this.val = val;
-        this.priority = priority;
+    sinkDownDel() {
+        let idx = 0;
+        const length = this.del_min.length;
+        const element = this.del_min[0];
+
+        while (true) {
+            let leftChildIdx = 2 * idx + 1;
+            let rightChildIdx = 2 * idx + 2;
+            let leftChild, rightChild;
+            let swap = null;
+            if (leftChildIdx < length) {
+                leftChild = this.del_min[leftChildIdx];
+                if (leftChild.time < element.time) {
+                    swap = leftChildIdx;
+                }
+            }
+
+            if (rightChild < length) {
+                rightChild = this.del_min[rightChildIdx];
+                if (
+                    (swap === null && rightChild.time < element.time) ||
+                    (swap !== null && rightChild.time < leftChild.time)
+                ) {
+                    swap = rightChildIdx;
+                }
+            }
+
+            if (swap === null) break;
+
+            this.del_min[idx] = this.del_min[swap];
+            this.del_min[swap] = element;
+            idx = swap;
+        }
     }
 }
 
-// class MinBinaryHeap {
-//     constructor() {
-//         this.values = [];
-//     }
-
-//     enqueue(val, priority) {
-//         let newNode = new Node(val, priority);
-//         this.values.push(newNode);
-//         this.bubbleUp();
-//     }
-
-//     bubbleUp() {
-//         // Referensikan ke element baru
-//         let idx = this.values.length - 1;
-//         const element = this.values[idx];
-
-//         // Temukan element parent
-//         while (idx > 0) {
-//             let parentIdx = Math.floor((idx - 1) / 2);
-//             let parent = this.values[parentIdx];
-//             if (element.priority >= parent.priority) break;
-//             this.values[parentIdx] = element;
-//             this.values[idx] = parent;
-//             idx = parentIdx;
-//         }
-//     }
-
-//     dequeue() {
-//         let min = this.values[0];
-//         let end = this.values.pop();
-//         if (this.values.length > 0) {
-//             this.values[0] = end;
-//             this.sinkDown();
-//         }
-//         return min;
-//     }
-
-//     sinkDown() {
-//         let idx = 0;
-//         const length = this.values.length; // Easier to reference length
-//         const element = this.values[0];
-
-//         while (true) {
-//             let leftChildIdx = 2 * idx + 1;
-//             let rightChildIdx = 2 * idx + 2;
-//             let leftChild, rightChild;
-//             let swap = null;
-
-//             if (leftChildIdx < length) {
-//                 leftChild = this.values[leftChildIdx];
-
-//                 if (leftChild.priority < element.priority) {
-//                     swap = leftChildIdx;
-//                 }
-//             }
-
-//             if (rightChildIdx < length) {
-//                 rightChild = this.values[rightChildIdx];
-
-//                 if (
-//                     (!swap && rightChild.priority < element.priority) ||
-//                     (swap && rightChild.priority < leftChild.priority)
-//                 ) {
-//                     swap = rightChildIdx;
-//                 }
-//             }
-//             if (!swap) break;
-//             this.values[idx] = this.values[swap];
-//             this.values[swap] = element;
-//             idx = swap;
-//         }
-//     }
-// }
-
-// class WeightGraph {
-//     constructor() {
-//         this.adjacencyList = {};
-//     }
-
-//     addVertex(vertex) {
-//         if (!this.adjacencyList[vertex]) this.adjacencyList[vertex] = [];
-//     }
-
-//     addEdge(vertex1, vertex2, weight) {
-//         this.adjacencyList[vertex1].push({ node: vertex2, weight: weight });
-//         this.adjacencyList[vertex2].push({ node: vertex1, weight: weight });
-//     }
-
-//     removeEdge(v1, v2) {
-//         this.adjacencyList[v1] = this.adjacencyList[v1].filter(
-//             (el) => el !== v2
-//         );
-//         this.adjacencyList[v2] = this.adjacencyList[v2].filter(
-//             (el) => el !== v1
-//         );
-//     }
-
-//     removeVertex(vertex) {
-//         while (this.adjacencyList[vertex].length) {
-//             const adjacentVertex = this.adjacencyList[vertex].pop();
-//             this.removeEdge(vertex, adjacentVertex);
-//         }
-//         delete this.adjacencyList[vertex];
-//     }
-
-//     DepthFirst(start) {
-//         let stack = [start];
-//         let result = [];
-//         let visited = {};
-//         let currentVertex;
-//         visited[start] = true;
-
-//         while (stack.length) {
-//             currentVertex = stack.pop();
-//             result.push(currentVertex);
-
-//             this.adjacencyList[currentVertex].forEach((neighbor) => {
-//                 if (!visited[neighbor]) {
-//                     visited[neighbor] = true;
-//                     stack.push(neighbor);
-//                 }
-//             });
-//         }
-//         return result;
-//     }
-
-//     Dijkstra(start, finish) {
-//         const queue = new MinBinaryHeap();
-//         const distances = {};
-//         const previous = {};
-
-//         let path = []; // to return at the end
-//         let smallest;
-
-//         for (let vertex in this.adjacencyList) {
-//             if (vertex === start) {
-//                 distances[vertex] = 0;
-//                 queue.enqueue(vertex, 0);
-//                 console.log("Vertex == start");
-//                 console.log(vertex);
-//             } else {
-//                 distances[vertex] = Infinity;
-//                 queue.enqueue(vertex, Infinity);
-//                 console.log("Vertex else");
-//                 console.log(vertex);
-//             }
-//             previous[vertex] = null;
-//         }
-//         console.log("Queue");
-//         console.log(queue.values);
-//         console.log(queue.values.length);
-//         console.log("----------");
-//         while (queue.values.length) {
-//             smallest = queue.dequeue().val;
-//             console.log("Smallest");
-//             console.log(smallest);
-//             if (smallest === finish) {
-//                 console.log("Smallest == finish");
-//                 while (previous[smallest]) {
-//                     path.push(smallest);
-//                     smallest = previous[smallest];
-//                     console.log(previous[smallest]);
-//                 }
-//                 console.log("Smallest == finish end ");
-//                 break;
-//             }
-//             if (smallest || distances[smallest] !== Infinity) {
-//                 for (let neighbor in this.adjacencyList[smallest]) {
-//                     let nextNode = this.adjacencyList[smallest][neighbor];
-//                     let candidate = distances[smallest] + nextNode.weight;
-//                     let neighborValue = nextNode.node;
-//                     if (candidate < distances[neighborValue]) {
-//                         // update 'distances' object
-//                         distances[neighborValue] = candidate;
-//                         // update 'previous' object
-//                         previous[neighborValue] = smallest;
-//                         // enqueue priority queue with new smallest distance
-//                         queue.enqueue(neighborValue, candidate);
-//                     }
-//                 }
-//             }
-//         }
-//         return path.concat(smallest).reverse();
-//     }
-// }
+class Node {
+    constructor(val, priority, time) {
+        this.val = val;
+        this.priority = priority;
+        this.time = time;
+    }
+}

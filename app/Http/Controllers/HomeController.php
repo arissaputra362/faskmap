@@ -93,7 +93,7 @@ class HomeController extends Controller
         $myLocation = Area::whereRaw("ST_Contains(polygon, ST_GeomFromText('POINT(" . $request->lng . ' ' . $request->lat . ")'))")->first();
 
         if ($myLocation) {
-            $location = 'Kelurahan ' . $myLocation->kelurahan . ',' .  ' Kecamatan ' . $myLocation->kecamatan;
+            $location = ucfirst(strtolower($myLocation->NAMOBJ)) . ',' .  ' Kecamatan ' . ucfirst(strtolower($myLocation->WADMKC));
         } else {
             $location = '-';
         }
@@ -123,5 +123,63 @@ class HomeController extends Controller
         });
 
         return response()->json(['d' => $dataFaskes]);
+    }
+
+    public function updateRoadData(Request $request)
+    {
+        $roadLine = json_decode(json_decode(json_encode($request->data)), true);
+        $roadLineLenght = sizeof($roadLine);
+        $runUpdate = false;
+        $count = 0;
+        $randCoor = rand(0, $roadLineLenght - 50);
+        $randCount = rand(10, 100);
+        $updateList = [];
+        for ($i = 0; $i < $roadLineLenght; $i++) {
+            if ($i == $randCoor) {
+                Log::debug("RUN");
+                $runUpdate = true;
+            }
+
+            if ($runUpdate == true && $count <= 200) {
+                $updateDist = $roadLine[$i][2] + 5.0;
+                array_push($updateList, [$roadLine[$i][0], $roadLine[$i][1], $updateDist]);
+                $count++;
+            }
+
+            if ($count == $randCount) {
+                $runUpdate = false;
+            }
+        }
+        $updateListRev = [];
+        $i = 0;
+        // foreach ($updateList as $coor) {
+        //     $tempArray = [
+        //         [
+        //             'lat' => round($coor[0]['lat'], 6),
+        //             'lng' => round($coor[0]['lng'], 6)
+        //         ],
+        //         [
+        //             'lat' => round($coor[1]['lat'], 6),
+        //             'lng' => round($coor[1]['lng'], 6)
+        //         ],
+        //         $coor[2]
+
+        //     ];
+        //     array_push($updateListRev, $tempArray);
+        //     $i++;
+        // }
+
+        foreach ($updateList as $coor) {
+            $tempArray = [
+                "LatLng(" . round($coor[0]['lat'], 6) . ", " . round($coor[0]['lng'], 6) . ")",
+                "LatLng(" . round($coor[1]['lat'], 6) . ", " . round($coor[1]['lng'], 6) . ")",
+                $coor[2]
+
+            ];
+            array_push($updateListRev, $tempArray);
+            $i++;
+        }
+
+        return response()->json(['data' => $updateListRev]);
     }
 }
